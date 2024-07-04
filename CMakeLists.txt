@@ -7,9 +7,9 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rmw REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 # Incluye los directorios de encabezados de la biblioteca externa
 include_directories(/usr/local/include/sbgCom)
@@ -18,9 +18,10 @@ include_directories(/usr/local/include/sbgCom)
 find_library(SICKLMS_LIB NAMES sbgCom PATHS /usr/local/lib)
 
 add_executable(sbg_node src/sbg_node.cpp)
-target_include_directories(sbg_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(sbg_node
+  "rclcpp"
+  "sensor_msgs"
+)
 target_compile_features(sbg_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 target_link_libraries(sbg_node ${SICKLMS_LIB})
 

@@ -30,7 +30,7 @@ ls -la /dev/
 
 ## ROS 2 Driver
 
-El driver para ROS 2 para este sensor esta basado en el driver de https://github.com/YDLIDAR/ydlidar_ros2 y https://github.com/SBG-Systems/sbg_ros2_driver.
+El driver para ROS 2 para este sensor esta basado en el driver de https://github.com/YDLIDAR/ydlidar_ros2, https://github.com/racarla96/caddy_ai2_sensors_SICK_LMS291-S05 y https://github.com/SBG-Systems/sbg_ros2_driver.
 
 ### Cómo construir el paquete
 
@@ -41,7 +41,7 @@ git clone https://github.com/racarla96/caddy_ai2_sensors_SBG_IG-500N.git
 ```
 2) Ve a la raíz del workspace y compila el espacio de trabajo.
 ```bash
-colcon build
+colcon build # colcon build --cmake-args -DCMAKE_CXX_FLAGS="-w"
 ```
 
 ## Cómo ejecutar el paquete
