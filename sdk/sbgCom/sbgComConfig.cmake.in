@@ -2,7 +2,7 @@
 
 include(CMakeFindDependencyMacro)
 
-set_and_check(sbgCom_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
-set_and_check(sbgCom_LIBRARY "@PACKAGE_LIB_INSTALL_DIR@/libsbgCom.so")
+set(sbgCom_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set(sbgCom_LIBRARIES "@PACKAGE_LIB_INSTALL_DIR@/libsbgCom.so")
 
 include("${CMAKE_CURRENT_LIST_DIR}/sbgComConfigVersion.cmake")

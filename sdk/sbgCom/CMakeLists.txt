@@ -56,7 +56,8 @@ set(SBG_COM_SRC
 )
 
 # Añade el objetivo de la librería
-add_library(sbgCom SHARED ${SBG_COM_SRC})
+#add_library(sbgCom SHARED ${SBG_COM_SRC})
+add_library(sbgCom STATIC ${SBG_COM_SRC})
 
 # Configura la instalación
 install(TARGETS sbgCom
@@ -64,23 +65,23 @@ install(TARGETS sbgCom
         ARCHIVE DESTINATION lib)
 
 install(DIRECTORY src/comWrapper/
-        DESTINATION include/comWrapper
+        DESTINATION include/sbgCom/comWrapper
         FILES_MATCHING PATTERN "*.h")
 
 install(DIRECTORY src/protocol/
-        DESTINATION include/protocol
+        DESTINATION include/sbgCom/protocol
         FILES_MATCHING PATTERN "*.h")
 
 install(DIRECTORY src/protocol/extDevices/
-        DESTINATION include/protocol/extDevices
+        DESTINATION include/sbgCom/protocol/extDevices
         FILES_MATCHING PATTERN "*.h")
 
 install(DIRECTORY src/time/
-        DESTINATION include/time
+        DESTINATION include/sbgCom/time
         FILES_MATCHING PATTERN "*.h")
 
 install(FILES src/sbgCom.h src/sbgCommon.h src/sbgComVersion.h
-        DESTINATION include)
+        DESTINATION include/sbgCom)
 
 # Configura el archivo de configuración de CMake para encontrar la librería
 include(CMakePackageConfigHelpers)

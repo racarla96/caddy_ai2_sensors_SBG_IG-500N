@@ -14,7 +14,7 @@ make
 sudo make install
 ```
 
-## Instalar un alias al puerto serie de la IMU
+### Instalar un alias al puerto serie de la IMU
 
 ```bash
 cd caddy_ai2_sensors_SBG_IG-500N/startup
@@ -25,13 +25,45 @@ sudo sh initenv.sh
 Si estaba conectado previamente, conectar y desconectar y comprobar que efectivamente aparece el nombre de sbg
 
 ```bash
-
+ls -la /dev/
 ```
 
 ## ROS 2 Driver
 
+El driver para ROS 2 para este sensor esta basado en el driver de https://github.com/YDLIDAR/ydlidar_ros2 y https://github.com/SBG-Systems/sbg_ros2_driver.
 
-## Testear la IMU con el paquete oficial
+### Cómo construir el paquete
+
+0) Abre una terminal y dirígete al workspace de ROS 2 o crea uno.
+1) Clona este proyecto en la carpeta src del espacio de trabajo.
+```bash
+git clone https://github.com/racarla96/caddy_ai2_sensors_SBG_IG-500N.git
+```
+2) Ve a la raíz del workspace y compila el espacio de trabajo.
+```bash
+colcon build
+```
+
+## Cómo ejecutar el paquete
+
+### 1. Ejecute el nodo y visualícelo usando la aplicación de prueba.
+
+```bash
+ros2 run sbg sbg_node
+ros2 run sbg sbg_client
+```
+
+### 2.Ejecute el nodo y visualícelo usando la aplicación de prueba al iniciar
+
+```bash
+ros2 launch sbg sbg_launch.py
+```
+
+Con rviz2 podemos ver la salida de la imu.
+
+## Paquete Oficial
+
+### Testear la IMU con el paquete oficial
 
 ```bash
 cd caddy_ai2_sensors_SBG_IG-500N/docs_official/SDK_3.2/USB/IG-Devices/Software\ Development/sbgCom/
