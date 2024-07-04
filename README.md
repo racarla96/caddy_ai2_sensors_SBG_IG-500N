@@ -2,7 +2,36 @@
 
 Este repositorio tiene el objetivo de guardar los documentos, CADs, programas, código del sensor y tener un driver funcional para ROS 2.
 
-## Instalación del driver 
+## Instalación del driver
+
+```bash
+cd caddy_ai2_sensors_SBG_IG-500N/sdk/sbgCom/
+mkdir build
+cd build
+# Si la arquitectura es BIG_ENDIAN: cmake -DSBG_PLATFORM_ENDIANNESS=BIG ..
+cmake .. 
+make
+sudo make install
+```
+
+## Instalar un alias al puerto serie de la IMU
+
+```bash
+cd caddy_ai2_sensors_SBG_IG-500N/startup
+sudo chmod +x initenv.sh
+sudo sh initenv.sh
+```
+
+Si estaba conectado previamente, conectar y desconectar y comprobar que efectivamente aparece el nombre de sbg
+
+```bash
+
+```
+
+## ROS 2 Driver
+
+
+## Testear la IMU con el paquete oficial
 
 ```bash
 cd caddy_ai2_sensors_SBG_IG-500N/docs_official/SDK_3.2/USB/IG-Devices/Software\ Development/sbgCom/
@@ -24,6 +53,3 @@ Nota: Ajuste /dev/ttyUSB0 según el puerto serie de su dispositivo. Para ver los
 ```bash
 sudo dmesg | grep tty
 ```
-
-
-## ROS 2 Driver

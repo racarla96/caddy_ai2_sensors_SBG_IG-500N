@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 	// On MacOS X, use for example "/dev/cu.SLAB_USBtoUART"
 	// On Windows, use for example "COM3"
 	//
-	if (sbgComInit("COM6", 115200, &protocolHandle) == SBG_NO_ERROR)
+	if (sbgComInit("/dev/ttyUSB0", 115200, &protocolHandle) == SBG_NO_ERROR)
 	{
 		//
 		// Wait until the device has been initialised
