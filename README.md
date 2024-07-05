@@ -2,7 +2,7 @@
 
 Este repositorio tiene el objetivo de guardar los documentos, CADs, programas, código del sensor y tener un driver funcional para ROS 2.
 
-## Requisito visualización con rviz2
+## Requisito visualización con rviz2 ¿Parece que no funciona?
 
 - https://gitlab.com/boldhearts/ros2_imu_tools
 ```bash
@@ -93,3 +93,5 @@ Nota: Ajuste /dev/ttyUSB0 según el puerto serie de su dispositivo. Para ver los
 sudo dmesg | grep tty
 ```
 
+## TODOs
+- [ ] Implementar uno o varios launch, uno con soporte para rviz2
