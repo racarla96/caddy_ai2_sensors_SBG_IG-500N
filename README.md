@@ -2,6 +2,13 @@
 
 Este repositorio tiene el objetivo de guardar los documentos, CADs, programas, código del sensor y tener un driver funcional para ROS 2.
 
+## Requisito visualización con rviz2
+
+- https://gitlab.com/boldhearts/ros2_imu_tools
+```bash
+sudo apt-get install ros-humble-imu-tools
+```
+
 ## Instalación del driver
 
 ```bash
@@ -30,7 +37,7 @@ ls -la /dev/
 
 ## ROS 2 Driver
 
-El driver para ROS 2 para este sensor esta basado en el driver de https://github.com/YDLIDAR/ydlidar_ros2, https://github.com/racarla96/caddy_ai2_sensors_SICK_LMS291-S05 y https://github.com/SBG-Systems/sbg_ros2_driver.
+El driver para ROS 2 para este sensor esta basado en el driver de https://github.com/YDLIDAR/ydlidar_ros2 y https://github.com/racarla96/caddy_ai2_sensors_SICK_LMS291-S05..
 
 ### Cómo construir el paquete
 
@@ -85,3 +92,4 @@ Nota: Ajuste /dev/ttyUSB0 según el puerto serie de su dispositivo. Para ver los
 ```bash
 sudo dmesg | grep tty
 ```
+
