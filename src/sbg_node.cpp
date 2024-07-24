@@ -53,18 +53,18 @@ private:
         imu_msg->header.frame_id = imu_frame_id;
 
         // Applied a 180 degrees rotation around the X axis to match car standard orientation
-        imu_msg->orientation.x = pOutput.stateQuat[0];
+        imu_msg->orientation.w = pOutput.stateQuat[0];
+        imu_msg->orientation.x = pOutput.stateQuat[1];
         imu_msg->orientation.y = pOutput.stateQuat[2];
-        imu_msg->orientation.z = -pOutput.stateQuat[1];
-        imu_msg->orientation.w = -pOutput.stateQuat[3];
+        imu_msg->orientation.z = pOutput.stateQuat[3];
 
         imu_msg->angular_velocity.x = pOutput.gyroscopes[0];
-        imu_msg->angular_velocity.y = -pOutput.gyroscopes[1];
-        imu_msg->angular_velocity.z = -pOutput.gyroscopes[2];
+        imu_msg->angular_velocity.y = pOutput.gyroscopes[1];
+        imu_msg->angular_velocity.z = pOutput.gyroscopes[2];
 
         imu_msg->linear_acceleration.x = pOutput.accelerometers[0];
-        imu_msg->linear_acceleration.y = -pOutput.accelerometers[1];
-        imu_msg->linear_acceleration.z = -pOutput.accelerometers[2];
+        imu_msg->linear_acceleration.y = pOutput.accelerometers[1];
+        imu_msg->linear_acceleration.z = pOutput.accelerometers[2];
 
         for (int i = 0; i < 9; i++) {
             imu_msg->orientation_covariance[i] = 0;
