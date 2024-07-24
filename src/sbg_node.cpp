@@ -13,6 +13,7 @@ private:
   string port = "/dev/sbg";
   int baudrate = 921600;
   string imu_frame_id = "imu";
+  string imu_frame_ned_id = imu_frame_id + "_ned";
   string gps_frame_id = "gps";
   int frequency = 500;
 
@@ -20,10 +21,13 @@ private:
   SbgProtocolHandle protocol_handle_; 
   SbgErrorCode last_error_;
 
+  double _sqrt2_2 = sqrt(2)/2;
+
   // https://docs.ros2.org/foxy/api/sensor_msgs/msg/Imu.html
   //orientation, angular_velocity, linear_acceleration
   const double IMU_COVARIANCES[3] = {0.0174532925, 0.00872664625, 0.049};
   std::shared_ptr<sensor_msgs::msg::Imu> imu_msg = std::make_shared<sensor_msgs::msg::Imu>();
+  std::shared_ptr<sensor_msgs::msg::Imu> imu_ned_msg = std::make_shared<sensor_msgs::msg::Imu>();
   const int IMU_OUTPUT_MASK = SBG_OUTPUT_QUATERNION | 
                               SBG_OUTPUT_GYROSCOPES |
                               SBG_OUTPUT_ACCELEROMETERS;
@@ -39,6 +43,7 @@ private:
                           GPS_OUTPUT_MASK;
 
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_ned_pub;
   rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr gps_pub;
   rclcpp::TimerBase::SharedPtr timer_;
 
@@ -53,32 +58,43 @@ private:
         imu_msg->header.frame_id = imu_frame_id;
 
         // Applied a 180 degrees rotation around the X axis to match car standard orientation
-        imu_msg->orientation.w = pOutput.stateQuat[0];
-        imu_msg->orientation.x = pOutput.stateQuat[1];
-        imu_msg->orientation.y = pOutput.stateQuat[2];
-        imu_msg->orientation.z = pOutput.stateQuat[3];
 
-        imu_msg->angular_velocity.x = pOutput.gyroscopes[0];
-        imu_msg->angular_velocity.y = pOutput.gyroscopes[1];
-        imu_msg->angular_velocity.z = pOutput.gyroscopes[2];
+        // https://es.mathworks.com/help/map/choose-a-3-d-coordinate-system.html
+        // Según PDF - docs/Converting quaternions.pdf
+        // rotx(180) * rotz(-90)
+        double w = pOutput.stateQuat[0];
+        double x = pOutput.stateQuat[0];
+        double y = pOutput.stateQuat[0];
+        double z = pOutput.stateQuat[0];
 
-        imu_msg->linear_acceleration.x = pOutput.accelerometers[0];
-        imu_msg->linear_acceleration.y = pOutput.accelerometers[1];
-        imu_msg->linear_acceleration.z = pOutput.accelerometers[2];
+        imu_msg->orientation.w =  _sqrt2_2 * (z - y);
+        imu_msg->orientation.x =  _sqrt2_2 * (y + z);
+        imu_msg->orientation.y =  _sqrt2_2 * (w - x);
+        imu_msg->orientation.z = -_sqrt2_2 * (w + x);
 
-        for (int i = 0; i < 9; i++) {
-            imu_msg->orientation_covariance[i] = 0;
-            imu_msg->angular_velocity_covariance[i] = 0;
-            imu_msg->linear_acceleration_covariance[i] = 0;
-        }
-        
-        for (int i = 0; i < 9; i+=3) {
-            imu_msg->orientation_covariance[i] = IMU_COVARIANCES[0];
-            imu_msg->angular_velocity_covariance[i] = IMU_COVARIANCES[1];
-            imu_msg->linear_acceleration_covariance[i] = IMU_COVARIANCES[2];
-        }
+        imu_msg->angular_velocity.x = pOutput.gyroscopes[1];
+        imu_msg->angular_velocity.y = pOutput.gyroscopes[0];
+        imu_msg->angular_velocity.z = -pOutput.gyroscopes[2];
+
+        imu_msg->linear_acceleration.x = pOutput.accelerometers[1];
+        imu_msg->linear_acceleration.y = pOutput.accelerometers[0];
+        imu_msg->linear_acceleration.z = -pOutput.accelerometers[2];
+
+        imu_ned_msg->orientation.w = pOutput.stateQuat[0];
+        imu_ned_msg->orientation.x = pOutput.stateQuat[1];
+        imu_ned_msg->orientation.y = pOutput.stateQuat[2];
+        imu_ned_msg->orientation.z = pOutput.stateQuat[3];
+
+        imu_ned_msg->angular_velocity.x = pOutput.gyroscopes[0];
+        imu_ned_msg->angular_velocity.y = pOutput.gyroscopes[1];
+        imu_ned_msg->angular_velocity.z = pOutput.gyroscopes[2];
+
+        imu_ned_msg->linear_acceleration.x = pOutput.accelerometers[0];
+        imu_ned_msg->linear_acceleration.y = pOutput.accelerometers[1];
+        imu_ned_msg->linear_acceleration.z = pOutput.accelerometers[2];
 
         imu_pub->publish(*imu_msg);
+        imu_ned_pub->publish(*imu_ned_msg);
       }
       if (pOutput.outputMask & GPS_OUTPUT_MASK) {
         
@@ -146,8 +162,34 @@ public:
     if(checkError("sbgSetContinuousMode: SBG_CONTINUOUS_MODE_ENABLE")) return;
 
     imu_pub = this->create_publisher<sensor_msgs::msg::Imu>("imu", 1);
+    imu_ned_pub = this->create_publisher<sensor_msgs::msg::Imu>("imu_ned", 1);
     gps_pub = this->create_publisher<sensor_msgs::msg::NavSatFix>("gps", 1);
     timer_ = this->create_wall_timer(std::chrono::duration<double>(1.0 / frequency), std::bind(&SBGNode::periodicTask, this));
+
+    // Constants values
+    for (int i = 0; i < 9; i++) {
+        imu_msg->orientation_covariance[i] = 0;
+        imu_msg->angular_velocity_covariance[i] = 0;
+        imu_msg->linear_acceleration_covariance[i] = 0;
+    }
+    
+    for (int i = 0; i < 9; i+=3) {
+        imu_msg->orientation_covariance[i] = IMU_COVARIANCES[0];
+        imu_msg->angular_velocity_covariance[i] = IMU_COVARIANCES[1];
+        imu_msg->linear_acceleration_covariance[i] = IMU_COVARIANCES[2];
+    }
+
+    for (int i = 0; i < 9; i++) {
+        imu_ned_msg->orientation_covariance[i] = 0;
+        imu_ned_msg->angular_velocity_covariance[i] = 0;
+        imu_ned_msg->linear_acceleration_covariance[i] = 0;
+    }
+    
+    for (int i = 0; i < 9; i+=3) {
+        imu_ned_msg->orientation_covariance[i] = IMU_COVARIANCES[0];
+        imu_ned_msg->angular_velocity_covariance[i] = IMU_COVARIANCES[1];
+        imu_ned_msg->linear_acceleration_covariance[i] = IMU_COVARIANCES[2];
+    }
 
     RCLCPP_INFO(this->get_logger(), "SBG node started");
   }
