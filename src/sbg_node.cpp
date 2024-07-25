@@ -5,6 +5,9 @@
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <sensor_msgs/msg/nav_sat_status.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Vector3.h>
 
 using namespace std;
 
@@ -21,14 +24,21 @@ private:
   SbgProtocolHandle protocol_handle_; 
   SbgErrorCode last_error_;
 
-  double _sqrt2_2 = sqrt(2)/2;
+  tf2::Vector3 _vec;
+  tf2::Matrix3x3 IMU2ROS;
+  tf2::Matrix3x3 NED2ENU;
+  tf2::Matrix3x3 _output_matrix;
+  tf2::Quaternion _quat;
+  tf2::Matrix3x3 _aux;
+
+  double gravity = 9.81;
 
   // https://docs.ros2.org/foxy/api/sensor_msgs/msg/Imu.html
   //orientation, angular_velocity, linear_acceleration
   const double IMU_COVARIANCES[3] = {0.0174532925, 0.00872664625, 0.049};
   std::shared_ptr<sensor_msgs::msg::Imu> imu_msg = std::make_shared<sensor_msgs::msg::Imu>();
   std::shared_ptr<sensor_msgs::msg::Imu> imu_ned_msg = std::make_shared<sensor_msgs::msg::Imu>();
-  const int IMU_OUTPUT_MASK = SBG_OUTPUT_QUATERNION | 
+  const int IMU_OUTPUT_MASK = SBG_OUTPUT_MATRIX | 
                               SBG_OUTPUT_GYROSCOPES |
                               SBG_OUTPUT_ACCELEROMETERS;
 
@@ -57,33 +67,46 @@ private:
         imu_msg->header.stamp = this->now();
         imu_msg->header.frame_id = imu_frame_id;
 
+        imu_ned_msg->header.stamp = this->now();
+        imu_ned_msg->header.frame_id = imu_frame_ned_id;
+
         // Applied a 180 degrees rotation around the X axis to match car standard orientation
 
         // https://es.mathworks.com/help/map/choose-a-3-d-coordinate-system.html
-        // Según PDF - docs/Converting quaternions.pdf
-        // rotx(180) * rotz(-90)
-        double w = pOutput.stateQuat[0];
-        double x = pOutput.stateQuat[0];
-        double y = pOutput.stateQuat[0];
-        double z = pOutput.stateQuat[0];
 
-        imu_msg->orientation.w =  _sqrt2_2 * (z - y);
-        imu_msg->orientation.x =  _sqrt2_2 * (y + z);
-        imu_msg->orientation.y =  _sqrt2_2 * (w - x);
-        imu_msg->orientation.z = -_sqrt2_2 * (w + x);
+        //pOutput.stateMatrix[0]
+        _output_matrix.setValue(pOutput.stateMatrix[0], pOutput.stateMatrix[1], pOutput.stateMatrix[2],
+                      pOutput.stateMatrix[3], pOutput.stateMatrix[4], pOutput.stateMatrix[5],
+                      pOutput.stateMatrix[6], pOutput.stateMatrix[7], pOutput.stateMatrix[8]);
+        /*
+        _aux = IMU2ROS * _output_matrix;
+        _aux.getRotation(_quat);
 
-        imu_msg->angular_velocity.x = pOutput.gyroscopes[1];
-        imu_msg->angular_velocity.y = pOutput.gyroscopes[0];
-        imu_msg->angular_velocity.z = -pOutput.gyroscopes[2];
+        imu_msg->orientation.w = _quat.w();
+        imu_msg->orientation.x = _quat.x();
+        imu_msg->orientation.y = _quat.y();
+        imu_msg->orientation.z = _quat.z();
 
-        imu_msg->linear_acceleration.x = pOutput.accelerometers[1];
-        imu_msg->linear_acceleration.y = pOutput.accelerometers[0];
-        imu_msg->linear_acceleration.z = -pOutput.accelerometers[2];
+        _vec.setValue(pOutput.gyroscopes[0], pOutput.gyroscopes[1], pOutput.gyroscopes[2]);
+        _vec = IMU2ROS * _vec;
 
-        imu_ned_msg->orientation.w = pOutput.stateQuat[0];
-        imu_ned_msg->orientation.x = pOutput.stateQuat[1];
-        imu_ned_msg->orientation.y = pOutput.stateQuat[2];
-        imu_ned_msg->orientation.z = pOutput.stateQuat[3];
+        imu_msg->angular_velocity.x = _vec.x();
+        imu_msg->angular_velocity.y = _vec.y();
+        imu_msg->angular_velocity.z = _vec.z();
+
+        _vec.setValue(pOutput.accelerometers[0], pOutput.accelerometers[1], pOutput.accelerometers[2]);
+        _vec = IMU2ROS * _vec;
+
+        imu_msg->linear_acceleration.x = _vec.x();
+        imu_msg->linear_acceleration.y = _vec.y();
+        imu_msg->linear_acceleration.z = _vec.z();
+        */
+        _output_matrix.getRotation(_quat);
+
+        imu_ned_msg->orientation.w = _quat.w();
+        imu_ned_msg->orientation.x = _quat.x();
+        imu_ned_msg->orientation.y = _quat.y();
+        imu_ned_msg->orientation.z = _quat.z();
 
         imu_ned_msg->angular_velocity.x = pOutput.gyroscopes[0];
         imu_ned_msg->angular_velocity.y = pOutput.gyroscopes[1];
@@ -190,6 +213,14 @@ public:
         imu_ned_msg->angular_velocity_covariance[i] = IMU_COVARIANCES[1];
         imu_ned_msg->linear_acceleration_covariance[i] = IMU_COVARIANCES[2];
     }
+
+    IMU2ROS.setValue(1.0,  0.0,  0.0,
+                     0.0, -1.0,  0.0,
+                     0.0,  0.0, -1.0);
+
+    NED2ENU.setValue(0.0,  1.0,  0.0,
+                     1.0,  0.0,  0.0,
+                     0.0,  0.0, -1.0);
 
     RCLCPP_INFO(this->get_logger(), "SBG node started");
   }

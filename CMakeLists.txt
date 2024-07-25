@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rmw REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 
 # Incluye los directorios de encabezados de la biblioteca externa
 include_directories(/usr/local/include/sbgCom)
@@ -21,6 +22,7 @@ add_executable(sbg_node src/sbg_node.cpp)
 ament_target_dependencies(sbg_node
   "rclcpp"
   "sensor_msgs"
+  "tf2"
 )
 target_compile_features(sbg_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 target_link_libraries(sbg_node ${SICKLMS_LIB})
